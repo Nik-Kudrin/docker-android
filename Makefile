@@ -1,5 +1,5 @@
 OWNER=malinskiy
-IMAGE_NAME=docker-android-example
+IMAGE_NAME=docker-android-agent
 VCS_REF=`git rev-parse --short HEAD`
 IMAGE_VERSION=1.0.$(TRAVIS_BUILD_NUMBER)
 QNAME=$(OWNER)/$(IMAGE_NAME)
