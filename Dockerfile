@@ -12,8 +12,8 @@ ENV LINK_ANDROID_SDK=https://dl.google.com/android/repository/commandlinetools-l
     LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8 \
-    GRADLE_VERSION=4.1 \
-    GRADLE_HOME="/opt/gradle-4.1/bin" \
+    GRADLE_VERSION=6.3 \
+    GRADLE_HOME="/opt/gradle-6.3/bin" \
     ANDROID_HOME=/opt/android-sdk-linux \
     PATH="$PATH:/usr/local/rvm/bin:/opt/android-sdk-linux/tools:/opt/android-sdk-linux/platform-tools:/opt/android-sdk-linux/tools/bin:/opt/android-sdk-linux/emulator:/opt/gradle-4.1/bin"
 
@@ -48,7 +48,7 @@ RUN dpkg --add-architecture i386 && \
     echo "deb mirror://mirrors.ubuntu.com/mirrors.txt bionic-backports main restricted universe multiverse" >> /etc/apt/sources.list && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -yq software-properties-common libstdc++6:i386 zlib1g:i386 libncurses5:i386 \
-        git git-extras zip \
+        git git-extras zip gpg-agent \
         locales ca-certificates apt-transport-https curl unzip redir iproute2 \
         openjdk-11-jdk nano telnet expect \
         libc6 libdbus-1-3 libfontconfig1 libgcc1 \
@@ -68,7 +68,7 @@ RUN curl -L $LINK_ANDROID_SDK > /tmp/android-sdk-linux.zip && \
     # echo no | avdmanager create avd -n "Pixel2" --package "system-images;{{ platform }};google_apis;x86" --tag google_apis && \
     # Unfilter devices (now local because CI downloads from github are unstable)
     # curl -o /root/.android/adb_usb.ini https://raw.githubusercontent.com/apkudo/adbusbini/master/adb_usb.ini && \
-    DEBIAN_FRONTEND=noninteractive apt-get purge -yq unzip openjdk-11-jdk && \
+    DEBIAN_FRONTEND=noninteractive apt-get purge -yq && \
     # Clean up
     apt-get -yq autoremove && \
     apt-get clean && \
@@ -77,13 +77,15 @@ RUN curl -L $LINK_ANDROID_SDK > /tmp/android-sdk-linux.zip && \
 
 # =================== END
 
-
 # Install stf-client
+#RUN apt-get install -yq ruby-full ruby-dev ruby-bundler
+
 RUN curl -sSL https://rvm.io/mpapis.asc | gpg --import - && \
+	curl -sSL https://rvm.io/pkuczynski.asc | gpg --import - && \
     curl -sSL https://get.rvm.io | grep -v __rvm_print_headline | bash -s stable --ruby && \
     echo "source /usr/local/rvm/scripts/rvm" >> ~/.bashrc && \
     # Install gems
-    /bin/bash -l -c "gem install bundler stf-client:0.3.0 --no-ri --no-rdoc"
+	/bin/bash -l -c "gem install bundler stf-client:0.3.0 --no-document"
 
 # # Install Android SDK
 # RUN curl -sSL $LINK_ANDROID_SDK > /tmp/android-sdk-linux.zip && \
@@ -103,9 +105,9 @@ RUN curl -sSL https://rvm.io/mpapis.asc | gpg --import - && \
 
 # Install Gradle
 RUN cd /opt && \
-    curl -fl -sSL https://downloads.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip -o gradle-bin.zip && \
-    unzip -q "gradle-bin.zip" && \
-    rm "gradle-bin.zip" && \
+    curl -fl -sSL http\://artifactory.at.ivi.ru/gradle/gradle-$GRADLE_VERSION-all.zip -o gradle-all.zip && \
+    unzip -q "gradle-all.zip" && \
+    rm "gradle-all.zip" && \
     mkdir -p ~/.gradle && \
     echo "org.gradle.daemon=false\norg.gradle.parallel=true\norg.gradle.configureondemand=true" > ~/.gradle/gradle.properties
 
