@@ -48,9 +48,8 @@ RUN dpkg --add-architecture i386 && \
     echo "deb mirror://mirrors.ubuntu.com/mirrors.txt bionic-backports main restricted universe multiverse" >> /etc/apt/sources.list && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -yq software-properties-common libstdc++6:i386 zlib1g:i386 libncurses5:i386 \
-        git git-extras zip gpg-agent \
-        locales ca-certificates apt-transport-https curl unzip redir iproute2 \
-        openjdk-11-jdk nano telnet expect \
+        openjdk-11-jdk vim git git-extras zip gpg-agent \
+        locales ca-certificates apt-transport-https curl unzip redir iproute2 expect \
         libc6 libdbus-1-3 libfontconfig1 libgcc1 \
         libpulse0 libtinfo5 libx11-6 libxcb1 libxdamage1 \
         libnss3 libxcomposite1 libxcursor1 libxi6 \
@@ -64,7 +63,8 @@ RUN curl -L $LINK_ANDROID_SDK > /tmp/android-sdk-linux.zip && \
     rm /tmp/android-sdk-linux.zip && \
     # Customized steps per specific platform
     yes | sdkmanager --no_https --licenses --sdk_root=${ANDROID_HOME} && \
-    yes | sdkmanager --sdk_root=${ANDROID_HOME} emulator tools platform-tools "platforms;{{ platform }}" "system-images;{{ platform }};google_apis;x86" --verbose | uniq && \
+    # yes | sdkmanager --sdk_root=${ANDROID_HOME} emulator tools platform-tools "platforms;{{ platform }}" "system-images;{{ platform }};google_apis;x86" --verbose | uniq && \
+    yes | sdkmanager --sdk_root=${ANDROID_HOME} tools platform-tools "platforms;{{ platform }}" "system-images;{{ platform }};google_apis;x86" --verbose | uniq && \
     # echo no | avdmanager create avd -n "Pixel2" --package "system-images;{{ platform }};google_apis;x86" --tag google_apis && \
     # Unfilter devices (now local because CI downloads from github are unstable)
     # curl -o /root/.android/adb_usb.ini https://raw.githubusercontent.com/apkudo/adbusbini/master/adb_usb.ini && \
@@ -105,11 +105,17 @@ RUN curl -sSL https://rvm.io/mpapis.asc | gpg --import - && \
 
 # Install Gradle
 RUN cd /opt && \
-    curl -fl -sSL http\://artifactory.at.ivi.ru/gradle/gradle-$GRADLE_VERSION-all.zip -o gradle-all.zip && \
+    curl -fl -sSL https://downloads.gradle.org/distributions/gradle-$GRADLE_VERSION-all.zip -o gradle-all.zip && \
     unzip -q "gradle-all.zip" && \
     rm "gradle-all.zip" && \
     mkdir -p ~/.gradle && \
     echo "org.gradle.daemon=false\norg.gradle.parallel=true\norg.gradle.configureondemand=true" > ~/.gradle/gradle.properties
+
+# Install Marathon
+RUN cd /opt && \
+	curl -fl -sSL https://github.com/Malinskiy/marathon/releases/download/0.6.0/marathon-0.6.0.zip -o marathon.zip && \
+	unzip -q "marathon.zip" && \
+    rm "marathon.zip"
 
 # Add STF init script
 COPY ./setup-stf.sh /etc/profile.d/stf.sh
